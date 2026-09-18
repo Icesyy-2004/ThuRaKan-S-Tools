@@ -183,6 +183,8 @@
   @media (prefers-reduced-motion:reduce){*{scroll-behavior:auto!important; transition:none!important;}}
   .stalled-only-note{display:grid;grid-template-columns:1fr 160px;gap:12px;align-items:end;margin-top:14px}
   .photo-slot.dragging{border-style:solid;border-color:#625bd5;background:#efefff;box-shadow:0 0 0 4px rgba(98,91,213,.13)}
+  .photo-slot.paste-target{border-style:solid;border-color:#625bd5;background:#f4f3ff;box-shadow:0 0 0 4px rgba(98,91,213,.12)}
+  .photo-slot.paste-target .photo-slot-title::after{content:' · พร้อมวางรูป';color:#625bd5;font-size:.8rem;font-weight:600}
   .photo-slot[data-slot="parcel"],.photo-slot[data-slot="insideParcel"],.photo-slot[data-slot="finalEvidence"],
   #photoNoteWrap,#photoFinalNoteWrap,.tabs,#generatePhotoDocBtn,#generateFormDocBtn{display:none!important}
   #generatorArea #gtab-photo,#generatorArea #gtab-form{display:block!important}
@@ -257,7 +259,7 @@
           </div>
           <div class="photo-slot" data-slot="damagedSample">
             <div class="photo-slot-head"><span class="photo-slot-title">รูปตัวอย่างสินค้า</span><label class="file-btn"><i class="ti ti-upload"></i> เพิ่มรูป<input type="file" accept="image/*" multiple class="photoInput" data-slot="damagedSample"></label></div>
-            <p class="photo-slot-hint">กดเพิ่มรูป หรือลากไฟล์มาวางในช่องนี้</p>
+            <p class="photo-slot-hint">คลิกช่องนี้แล้วกด Ctrl + V เพื่อวางรูปจากคลิปบอร์ด หรือกดเพิ่มรูป/ลากไฟล์มาวาง</p>
             <div class="thumb-row" data-thumbs="damagedSample"></div>
           </div>
           <div class="photo-slot" data-slot="insideParcel">
@@ -270,7 +272,7 @@
           </div>
           <div class="photo-slot" data-slot="valueEvidence">
             <div class="photo-slot-head"><span class="photo-slot-title">รูปหลักฐานคำสั่งซื้อ</span><label class="file-btn"><i class="ti ti-upload"></i> เพิ่มรูป<input type="file" accept="image/*" multiple class="photoInput" data-slot="valueEvidence"></label></div>
-            <p class="photo-slot-hint">กดเพิ่มรูป หรือลากไฟล์มาวางในช่องนี้</p>
+            <p class="photo-slot-hint">คลิกช่องนี้แล้วกด Ctrl + V เพื่อวางรูปจากคลิปบอร์ด หรือกดเพิ่มรูป/ลากไฟล์มาวาง</p>
             <div class="thumb-row" data-thumbs="valueEvidence"></div>
           </div>
           <div id="photoFinalNoteWrap" style="margin-bottom:12px;">
@@ -544,6 +546,7 @@ loadDefaults();
 
 // ===== อัปโหลดรูปแต่ละช่อง =====
 var photoStore = {parcel:[], damagedSample:[], insideParcel:[], valueEvidence:[], finalEvidence:[]};
+var activePhotoSlot = 'damagedSample';
 function detectDocxImageType(file){
   var mime = (file.type || '').toLowerCase();
   if(mime.indexOf('png') !== -1) return 'png';
@@ -596,9 +599,31 @@ document.querySelectorAll('.photoInput').forEach(function(input){
 });
 document.querySelectorAll('.photo-slot').forEach(function(zone){
   var slot = zone.getAttribute('data-slot');
+  zone.setAttribute('tabindex','0');
+  function selectPasteTarget(){
+    activePhotoSlot=slot;
+    document.querySelectorAll('.photo-slot').forEach(function(z){z.classList.toggle('paste-target',z===zone);});
+  }
+  zone.addEventListener('pointerdown',selectPasteTarget);
+  zone.addEventListener('focusin',selectPasteTarget);
   ['dragenter','dragover'].forEach(function(type){ zone.addEventListener(type,function(e){ e.preventDefault(); zone.classList.add('dragging'); }); });
   ['dragleave','drop'].forEach(function(type){ zone.addEventListener(type,function(e){ e.preventDefault(); zone.classList.remove('dragging'); }); });
   zone.addEventListener('drop',function(e){ addPhotoFiles(slot,e.dataTransfer.files); });
+});
+var firstPasteZone=document.querySelector('.photo-slot[data-slot="damagedSample"]');
+if(firstPasteZone) firstPasteZone.classList.add('paste-target');
+document.addEventListener('paste',function(e){
+  var items=Array.from((e.clipboardData&&e.clipboardData.items)||[]);
+  var images=items.filter(function(item){return item.kind==='file'&&/^image\//.test(item.type);}).map(function(item,index){
+    var blob=item.getAsFile();
+    if(!blob) return null;
+    var ext=(blob.type.split('/')[1]||'png').replace('jpeg','jpg');
+    return new File([blob],'clipboard-'+Date.now()+'-'+(index+1)+'.'+ext,{type:blob.type});
+  }).filter(Boolean);
+  if(!images.length) return;
+  e.preventDefault();
+  addPhotoFiles(activePhotoSlot,images);
+  showToast('วางรูปจากคลิปบอร์ดแล้ว '+images.length+' รูป');
 });
 function renderThumbs(slot){
   var box = document.querySelector('[data-thumbs="'+slot+'"]');
