@@ -233,6 +233,10 @@
         <div><label for="stalledDays">สาเหตุการเคลม</label><input value="พัสดุไม่เคลื่อนไหว" readonly></div>
         <div><label for="stalledDays">ไม่เคลื่อนไหวกี่วัน</label><input type="number" id="stalledDays" min="1" step="1" placeholder="เช่น 7"></div>
       </div>
+      <div style="margin-top:12px;">
+        <label for="stalledExtraNote">หมายเหตุเพิ่มเติม (ถ้ามี)</label>
+        <textarea id="stalledExtraNote" placeholder="เช่น ลูกค้าติดต่อสอบถามแล้ว / ขอให้ตรวจสอบพัสดุเร่งด่วน"></textarea>
+      </div>
       <div id="foundClaimBox"></div>
     </div>
 
@@ -828,6 +832,7 @@ function buildStalledPhotoDocBlob(){
   var D = docx;
   var tracking = document.getElementById('photoTracking').value;
   var reason = document.getElementById('formDamageDetail').value;
+  var extraNote = document.getElementById('stalledExtraNote').value.trim();
   var product = document.getElementById('formProductDetail').value;
   var qty = document.getElementById('formQty').value;
   var amount = document.getElementById('formClaimAmount').value;
@@ -836,6 +841,9 @@ function buildStalledPhotoDocBlob(){
     new D.Paragraph({alignment:D.AlignmentType.CENTER,children:[new D.TextRun({text:reason,size:27,bold:true,color:'C00000'})]}),
     new D.Paragraph({children:[new D.TextRun({text:'สินค้า: '+product+' | จำนวน: '+qty+' | ยอดเคลม: '+amount+' บาท',size:22})]})
   ];
+  if(extraNote){
+    children.push(new D.Paragraph({children:[new D.TextRun({text:'หมายเหตุ: '+extraNote,size:22,bold:true,color:'625BD5'})]}));
+  }
   function addImages(title,slot,wide){
     children.push(new D.Paragraph({heading:D.HeadingLevel.HEADING_2,children:[new D.TextRun({text:title})]}));
     if(wide){
