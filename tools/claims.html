@@ -11,6 +11,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;600&family=Sarabun:wght@400;600;700&display=swap" rel="stylesheet">
 <script src="https://unpkg.com/docx@9.7.1/dist/index.umd.cjs"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <style>
   :root{
     --page-bg:#FAFAF9; --surface-1:#F4F3F1; --surface-2:#FFFFFF;
@@ -183,6 +184,7 @@
   .photo-slot.dragging{border-style:solid;border-color:#625bd5;background:#efefff;box-shadow:0 0 0 4px rgba(98,91,213,.13)}
   .photo-slot.paste-target{border-style:solid;border-color:#625bd5;background:#f4f3ff;box-shadow:0 0 0 4px rgba(98,91,213,.12)}
   .photo-slot.paste-target .photo-slot-title::after{content:' · พร้อมวางรูป';color:#625bd5;font-size:.8rem;font-weight:600}
+  .zip-action{width:100%;min-height:54px;margin-top:18px;font-size:1.05rem;background:#ffcf56;color:#26243f}
 </style>
 </head>
 <body>
@@ -327,6 +329,7 @@
         </div>
         <button class="btn-sync" id="generateFormDocBtn"><i class="ti ti-file-download"></i> สร้างแบบฟอร์ม .pdf</button>
       </div>
+      <button class="btn-sync zip-action" id="generateClaimZipBtn"><i class="ti ti-file-zip"></i> บันทึกเอกสาร 2 ชุดเป็น ZIP</button>
     </div>
   </main>
 </div>
@@ -800,6 +803,70 @@ document.getElementById('generateFormDocBtn').addEventListener('click', function
       showToast('สร้างแบบฟอร์มแจ้งเคลม PDF แล้ว');
     });
   }, 300);
+});
+
+function buildOrdinaryPhotoDocBlob(){
+  var D=docx;
+  var tracking=document.getElementById('photoTracking').value;
+  var vip=document.getElementById('photoVipCode').value.trim();
+  var note=document.getElementById('photoNote').value.trim();
+  var finalNote=document.getElementById('photoFinalNote').value.trim();
+  var children=[];
+  children.push(new D.Paragraph({alignment:D.AlignmentType.CENTER,children:[new D.TextRun({text:tracking,size:40,bold:true})]}));
+  if(vip)children.push(new D.Paragraph({alignment:D.AlignmentType.CENTER,children:[new D.TextRun({text:vip,size:22})]}));
+  function addPhotoSection(title,slot){
+    if(!photoStore[slot].length)return;
+    children.push(new D.Paragraph({heading:D.HeadingLevel.HEADING_2,children:[new D.TextRun({text:title})]}));
+    var runs=photoStore[slot].map(function(p){return new D.ImageRun({data:p.buffer,transformation:{width:130,height:173},type:p.imgType||'jpg'});});
+    for(var i=0;i<runs.length;i+=4)children.push(new D.Paragraph({children:runs.slice(i,i+4)}));
+  }
+  addPhotoSection('รูปถ่ายพัสดุ','parcel');
+  addPhotoSection('รูปตัวอย่างสินค้าที่เสียหาย','damagedSample');
+  addPhotoSection('รูปสินค้าภายในพัสดุ','insideParcel');
+  if(note)children.push(new D.Paragraph({children:[new D.TextRun({text:note,bold:true,color:'C00000',size:28})]}));
+  if(photoStore.valueEvidence.length){
+    children.push(new D.Paragraph({heading:D.HeadingLevel.HEADING_2,children:[new D.TextRun({text:'หลักฐานแสดงมูลค่า'})]}));
+    photoStore.valueEvidence.forEach(function(p){children.push(new D.Paragraph({children:[new D.ImageRun({data:p.buffer,transformation:{width:560,height:280},type:p.imgType||'png'})]}));});
+  }
+  if(finalNote)children.push(new D.Paragraph({children:[new D.TextRun({text:finalNote})]}));
+  photoStore.finalEvidence.forEach(function(p){children.push(new D.Paragraph({children:[new D.ImageRun({data:p.buffer,transformation:{width:560,height:280},type:p.imgType||'png'})]}));});
+  var documentFile=new D.Document({sections:[{properties:{page:{margin:{top:900,bottom:900,left:900,right:900}}},children:children}]});
+  return D.Packer.toBlob(documentFile);
+}
+
+function buildOrdinaryClaimPdfBlob(){
+  return new Promise(function(resolve,reject){
+    var container=document.createElement('div');
+    container.style.cssText='position:fixed;top:0;left:0;z-index:-9999;opacity:.01;pointer-events:none';
+    container.innerHTML=buildClaimFormOverlayHTML();
+    document.body.appendChild(container);
+    var el=container.querySelector('#claimFormPrintArea');
+    var pxToPt=.75,pageWidthPt=Math.ceil(CLAIM_FORM_IMG_W*pxToPt),pageHeightPt=Math.ceil(CLAIM_FORM_IMG_H*pxToPt);
+    setTimeout(function(){
+      html2pdf().set({margin:0,image:{type:'jpeg',quality:.98},html2canvas:{scale:2,useCORS:true,backgroundColor:'#ffffff',scrollX:0,scrollY:0},jsPDF:{unit:'pt',format:[pageWidthPt,pageHeightPt],orientation:'landscape'}})
+        .from(el).toPdf().outputPdf('blob').then(function(blob){container.remove();resolve(blob);}).catch(function(err){container.remove();reject(err);});
+    },200);
+  });
+}
+
+document.getElementById('generateClaimZipBtn').addEventListener('click',async function(){
+  if(!currentClaim){showToast('ค้นหาและเลือกรายการจากชีทก่อน',true);return;}
+  var button=this,tracking=currentClaim.tracking;
+  button.disabled=true;button.textContent='กำลังสร้างเอกสาร 2 ชุด…';
+  try{
+    var docBlob=await buildOrdinaryPhotoDocBlob();
+    var pdfBlob=await buildOrdinaryClaimPdfBlob();
+    var zip=new JSZip();
+    zip.file(tracking+'_รูปประกอบ.docx',docBlob);
+    zip.file('แบบฟอร์มแจ้งเคลม_'+tracking+'.pdf',pdfBlob);
+    var zipBlob=await zip.generateAsync({type:'blob',compression:'DEFLATE',compressionOptions:{level:6}});
+    downloadBlob(zipBlob,'เอกสารเคลม_'+tracking+'.zip');
+    showToast('บันทึก ZIP พร้อมเอกสาร 2 ชุดแล้ว');
+  }catch(err){
+    console.error(err);showToast('สร้างไฟล์ไม่สำเร็จ กรุณาลองอีกครั้ง',true);
+  }finally{
+    button.disabled=false;button.innerHTML='<i class="ti ti-file-zip"></i> บันทึกเอกสาร 2 ชุดเป็น ZIP';
+  }
 });
 </script>
 </body>
