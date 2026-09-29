@@ -185,7 +185,8 @@
   .photo-slot.paste-target{border-style:solid;border-color:#625bd5;background:#f4f3ff;box-shadow:0 0 0 4px rgba(98,91,213,.12)}
   .photo-slot.paste-target .photo-slot-title::after{content:' · พร้อมวางรูป';color:#625bd5;font-size:.8rem;font-weight:600}
   .zip-action{width:100%;min-height:54px;margin-top:18px;font-size:1.05rem;background:#ffcf56;color:#26243f}
-  .tabs,#generatePhotoDocBtn,#generateFormDocBtn{display:none!important}
+  .tabs,#generatePhotoDocBtn{display:none!important}
+  #generateFormDocBtn{display:block!important;width:100%;margin-top:2px;background:#fff;color:#625bd5;border-color:#625bd5;box-shadow:3px 3px 0 #625bd5}
   #generatorArea #gtab-photo,#generatorArea #gtab-form{display:block!important}
   #gtab-form{margin-top:26px;padding-top:24px;border-top:2px dashed #b9bac9}
   #gtab-form::before{content:'ข้อมูลสำหรับแบบฟอร์มแจ้งเคลม PDF';display:block;font-size:1.15rem;font-weight:700;margin:0 0 14px;color:#26243f}
@@ -265,11 +266,6 @@
             <label>หมายเหตุ (สรุปความเสียหาย)</label>
             <input type="text" id="photoNote" placeholder="เช่น พัสดุตีกลับสูญหาย(บางส่วน) 1 ชิ้น ยอด 179.-">
           </div>
-          <div class="photo-slot" data-slot="valueEvidence">
-            <div class="photo-slot-head"><span class="photo-slot-title">หลักฐานแสดงมูลค่า</span><label class="file-btn"><i class="ti ti-upload"></i> เพิ่มรูป<input type="file" accept="image/*" multiple class="photoInput" data-slot="valueEvidence"></label></div>
-            <p class="photo-slot-hint">แคปแชท/หน้าจอราคาสินค้าที่ตกลงกับลูกค้า</p>
-            <div class="thumb-row" data-thumbs="valueEvidence"></div>
-          </div>
           <div style="margin-bottom:12px;">
             <label>หมายเหตุท้ายเอกสาร (ถ้ามี)</label>
             <textarea id="photoFinalNote" placeholder="เช่น เทเลเซลโทรไปหาลูกค้าเพื่อเปลี่ยนสินค้า..."></textarea>
@@ -331,7 +327,7 @@
             <div><label>จำนวนเงินที่เรียกร้อง (บาท)</label><input type="number" id="formClaimAmount"></div>
           </div>
         </div>
-        <button class="btn-sync" id="generateFormDocBtn"><i class="ti ti-file-download"></i> สร้างแบบฟอร์ม .pdf</button>
+        <button class="btn-sync" id="generateFormDocBtn"><i class="ti ti-file-download"></i> โหลดเฉพาะไฟล์ PDF</button>
       </div>
       <button class="btn-sync zip-action" id="generateClaimZipBtn"><i class="ti ti-file-zip"></i> บันทึกเอกสาร 2 ชุดเป็น ZIP</button>
     </div>
@@ -530,7 +526,7 @@ document.getElementById('saveDefaultsBtn').addEventListener('click', function(){
 loadDefaults();
 
 // ===== อัปโหลดรูปแต่ละช่อง =====
-var photoStore = {parcel:[], damagedSample:[], insideParcel:[], valueEvidence:[], finalEvidence:[]};
+var photoStore = {parcel:[], damagedSample:[], insideParcel:[], finalEvidence:[]};
 var activePhotoSlot = 'parcel';
 function detectDocxImageType(file){
   var mime = (file.type || '').toLowerCase();
@@ -567,7 +563,6 @@ function addPhotoFiles(slot, files){
         var r2 = new FileReader();
         r2.onload = function(ev2){
           photoStore[slot][photoStore[slot].length-1].dataUrl = ev2.target.result;
-          if(slot === 'valueEvidence') photoStore[slot].sort(function(a,b){ return naturalCompare(a.name, b.name); });
           renderThumbs(slot);
         };
         r2.readAsDataURL(f);
@@ -662,13 +657,6 @@ document.getElementById('generatePhotoDocBtn').addEventListener('click', functio
 
   if(note){
     children.push(new D.Paragraph({ children:[new D.TextRun({text:note, bold:true, color:'C00000', size:28})] }));
-  }
-
-  if(photoStore.valueEvidence.length){
-    children.push(new D.Paragraph({ heading:D.HeadingLevel.HEADING_2, children:[new D.TextRun({text:'หลักฐานแสดงมูลค่า'})] }));
-    photoStore.valueEvidence.forEach(function(p){
-      children.push(new D.Paragraph({ children:[new D.ImageRun({ data:p.buffer, transformation:{width:560, height:280}, type:p.imgType || 'png' })] }));
-    });
   }
 
   if(finalNote){
@@ -828,10 +816,6 @@ function buildOrdinaryPhotoDocBlob(){
   addPhotoSection('รูปตัวอย่างสินค้าที่เสียหาย','damagedSample');
   addPhotoSection('รูปสินค้าภายในพัสดุ','insideParcel');
   if(note)children.push(new D.Paragraph({children:[new D.TextRun({text:note,bold:true,color:'C00000',size:28})]}));
-  if(photoStore.valueEvidence.length){
-    children.push(new D.Paragraph({heading:D.HeadingLevel.HEADING_2,children:[new D.TextRun({text:'หลักฐานแสดงมูลค่า'})]}));
-    photoStore.valueEvidence.forEach(function(p){children.push(new D.Paragraph({children:[new D.ImageRun({data:p.buffer,transformation:{width:560,height:280},type:p.imgType||'png'})]}));});
-  }
   if(finalNote)children.push(new D.Paragraph({children:[new D.TextRun({text:finalNote})]}));
   photoStore.finalEvidence.forEach(function(p){children.push(new D.Paragraph({children:[new D.ImageRun({data:p.buffer,transformation:{width:560,height:280},type:p.imgType||'png'})]}));});
   var documentFile=new D.Document({sections:[{properties:{page:{margin:{top:900,bottom:900,left:900,right:900}}},children:children}]});

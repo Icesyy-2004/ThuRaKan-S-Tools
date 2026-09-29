@@ -186,7 +186,8 @@
   .photo-slot.paste-target{border-style:solid;border-color:#625bd5;background:#f4f3ff;box-shadow:0 0 0 4px rgba(98,91,213,.12)}
   .photo-slot.paste-target .photo-slot-title::after{content:' · พร้อมวางรูป';color:#625bd5;font-size:.8rem;font-weight:600}
   .photo-slot[data-slot="parcel"],.photo-slot[data-slot="insideParcel"],.photo-slot[data-slot="finalEvidence"],
-  #photoNoteWrap,#photoFinalNoteWrap,.tabs,#generatePhotoDocBtn,#generateFormDocBtn{display:none!important}
+  #photoNoteWrap,#photoFinalNoteWrap,.tabs,#generatePhotoDocBtn{display:none!important}
+  #generateFormDocBtn{display:block!important;width:100%;margin-top:2px;background:#fff;color:#625bd5;border-color:#625bd5;box-shadow:3px 3px 0 #625bd5}
   #generatorArea #gtab-photo,#generatorArea #gtab-form{display:block!important}
   .zip-action{width:100%;min-height:54px;margin-top:4px;font-size:1.05rem;background:#ffcf56;color:#26243f}
   @media(max-width:700px){.stalled-only-note{grid-template-columns:1fr}}
@@ -274,11 +275,6 @@
             <label>หมายเหตุ (สรุปความเสียหาย)</label>
             <input type="text" id="photoNote" placeholder="เช่น พัสดุตีกลับสูญหาย(บางส่วน) 1 ชิ้น ยอด 179.-">
           </div>
-          <div class="photo-slot" data-slot="valueEvidence">
-            <div class="photo-slot-head"><span class="photo-slot-title">รูปหลักฐานคำสั่งซื้อ</span><label class="file-btn"><i class="ti ti-upload"></i> เพิ่มรูป<input type="file" accept="image/*" multiple class="photoInput" data-slot="valueEvidence"></label></div>
-            <p class="photo-slot-hint">คลิกช่องนี้แล้วกด Ctrl + V เพื่อวางรูปจากคลิปบอร์ด หรือกดเพิ่มรูป/ลากไฟล์มาวาง</p>
-            <div class="thumb-row" data-thumbs="valueEvidence"></div>
-          </div>
           <div id="photoFinalNoteWrap" style="margin-bottom:12px;">
             <label>หมายเหตุท้ายเอกสาร (ถ้ามี)</label>
             <textarea id="photoFinalNote" placeholder="เช่น เทเลเซลโทรไปหาลูกค้าเพื่อเปลี่ยนสินค้า..."></textarea>
@@ -340,7 +336,7 @@
             <div><label>จำนวนเงินที่เรียกร้อง (บาท)</label><input type="number" id="formClaimAmount"></div>
           </div>
         </div>
-        <button class="btn-sync" id="generateFormDocBtn"><i class="ti ti-file-download"></i> สร้างแบบฟอร์ม .pdf</button>
+        <button class="btn-sync" id="generateFormDocBtn"><i class="ti ti-file-download"></i> โหลดเฉพาะไฟล์ PDF</button>
       </div>
       <button class="btn-sync zip-action" id="generateClaimZipBtn"><i class="ti ti-file-zip"></i> บันทึกเอกสาร 2 ชุดเป็น ZIP</button>
     </div>
@@ -549,7 +545,7 @@ document.getElementById('saveDefaultsBtn').addEventListener('click', function(){
 loadDefaults();
 
 // ===== อัปโหลดรูปแต่ละช่อง =====
-var photoStore = {parcel:[], damagedSample:[], insideParcel:[], valueEvidence:[], finalEvidence:[]};
+var photoStore = {parcel:[], damagedSample:[], insideParcel:[], finalEvidence:[]};
 var activePhotoSlot = 'damagedSample';
 function detectDocxImageType(file){
   var mime = (file.type || '').toLowerCase();
@@ -586,7 +582,6 @@ function addPhotoFiles(slot, files){
         var r2 = new FileReader();
         r2.onload = function(ev2){
           photoStore[slot][photoStore[slot].length-1].dataUrl = ev2.target.result;
-          if(slot === 'valueEvidence') photoStore[slot].sort(function(a,b){ return naturalCompare(a.name, b.name); });
           renderThumbs(slot);
         };
         r2.readAsDataURL(f);
@@ -681,13 +676,6 @@ document.getElementById('generatePhotoDocBtn').addEventListener('click', functio
 
   if(note){
     children.push(new D.Paragraph({ children:[new D.TextRun({text:note, bold:true, color:'C00000', size:28})] }));
-  }
-
-  if(photoStore.valueEvidence.length){
-    children.push(new D.Paragraph({ heading:D.HeadingLevel.HEADING_2, children:[new D.TextRun({text:'หลักฐานแสดงมูลค่า'})] }));
-    photoStore.valueEvidence.forEach(function(p){
-      children.push(new D.Paragraph({ children:[new D.ImageRun({ data:p.buffer, transformation:{width:560, height:280}, type:p.imgType || 'png' })] }));
-    });
   }
 
   if(finalNote){
@@ -855,7 +843,6 @@ function buildStalledPhotoDocBlob(){
     }
   }
   addImages('รูปตัวอย่างสินค้า','damagedSample',false);
-  addImages('รูปหลักฐานคำสั่งซื้อ','valueEvidence',true);
   var doc = new D.Document({sections:[{properties:{page:{margin:{top:900,bottom:900,left:900,right:900}}},children:children}]});
   return D.Packer.toBlob(doc);
 }
@@ -878,7 +865,7 @@ function buildClaimPdfBlob(){
 document.getElementById('generateClaimZipBtn').addEventListener('click',async function(){
   if(!currentClaim){showToast('ค้นหาและเลือกรายการจากชีทก่อน',true);return;}
   if(!document.getElementById('stalledDays').value){showToast('กรอกจำนวนวันที่พัสดุไม่เคลื่อนไหวก่อน',true);return;}
-  if(!photoStore.damagedSample.length||!photoStore.valueEvidence.length){showToast('ใส่รูปตัวอย่างสินค้าและรูปหลักฐานคำสั่งซื้อให้ครบก่อน',true);return;}
+  if(!photoStore.damagedSample.length){showToast('ใส่รูปตัวอย่างสินค้าให้ครบก่อน',true);return;}
   applyStalledReason();
   var button=this,tracking=currentClaim.tracking;
   button.disabled=true;button.textContent='กำลังสร้างเอกสาร 2 ชุด…';
