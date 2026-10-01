@@ -224,7 +224,10 @@
           <option value="มิถุนายน69">มิถุนายน 69</option>
           <option value="กรกฎาคม69">กรกฎาคม 69</option>
           <option value="สิงหาคม69">สิงหาคม 69</option>
-          <option value="กันยายน69" selected>กันยายน 69</option>
+          <option value="กันยายน69">กันยายน 69</option>
+          <option value="ตุลาคม69">ตุลาคม 69</option>
+          <option value="พฤศจิกายน69">พฤศจิกายน 69</option>
+          <option value="ธันวาคม69">ธันวาคม 69</option>
         </select>
         <input type="text" id="claimSearchInput" class="mono" placeholder="พิมพ์เลขพัสดุหรือเลขออเดอร์แล้วกด Enter">
         <button class="btn-primary" id="claimSearchBtn">ค้นหา</button>
@@ -479,6 +482,13 @@ async function doClaimSearch(){
     button.textContent = 'ค้นหา';
   }
 }
+var claimMonthValues = ['มกราคม69','กุมภาพันธ์69','มีนาคม69','เมษายน69','พฤษภาคม69','มิถุนายน69','กรกฎาคม69','สิงหาคม69','กันยายน69','ตุลาคม69','พฤศจิกายน69','ธันวาคม69'];
+var currentClaimMonth = claimMonthValues[new Date().getMonth()];
+var claimMonthSelect = document.getElementById('claimMonthSelect');
+if(Array.from(claimMonthSelect.options).some(function(option){ return option.value === currentClaimMonth; })){
+  claimMonthSelect.value = currentClaimMonth;
+}
+
 document.getElementById('claimSearchBtn').addEventListener('click', doClaimSearch);
 document.getElementById('claimSearchInput').addEventListener('keydown', function(e){ if(e.key==='Enter') doClaimSearch(); });
 
