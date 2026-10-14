@@ -25,6 +25,7 @@
         <button data-tool="orders"><span class="nav-icon">📦</span>คำนวณออเดอร์</button>
         <button data-tool="claims"><span class="nav-icon">📎</span>เคลมธรรมดา</button>
         <button data-tool="stalled"><span class="nav-icon">⏳</span>เคลมไม่เคลื่อนไหว</button>
+        <button data-tool="batch"><span class="nav-icon">🗂️</span>แบบฟอร์มเคลมหลายเลข</button>
       </nav>
       <div class="footnote">เลือกเครื่องมือแล้วเริ่มงานได้เลย<br>ข้อมูลส่วนตัวจะอยู่ในเบราว์เซอร์เครื่องนี้</div>
     </aside>
@@ -37,6 +38,7 @@
           <article class="tool-card" tabindex="0" role="button" data-tool="orders"><div class="card-icon">📦</div><h2>คำนวณออเดอร์</h2><p>นำเข้าไฟล์เพื่อดูว่าสต๊อกจะเคลียร์ออเดอร์ได้ถึงวันไหน</p><div class="open">เปิดเครื่องมือ →</div></article>
           <article class="tool-card" tabindex="0" role="button" data-tool="claims"><div class="card-icon">📎</div><h2>ทำเอกสารเคลม</h2><p>เครื่องมือเคลมแบบเดิม เลือกรูปและสร้าง DOCX หรือ PDF แยกกัน</p><div class="open">เปิดเครื่องมือ →</div></article>
           <article class="tool-card" tabindex="0" role="button" data-tool="stalled"><div class="card-icon">⏳</div><h2>เคลมพัสดุไม่เคลื่อนไหว</h2><p>กรอกครั้งเดียว ลากรูปมาวาง แล้วรับเอกสาร 2 ชุดพร้อมกันใน ZIP</p><div class="open">เปิดเครื่องมือ →</div></article>
+          <article class="tool-card" tabindex="0" role="button" data-tool="batch"><div class="card-icon">🗂️</div><h2>แบบฟอร์มเคลมหลายเลข</h2><p>จับคู่ไฟล์ที่อยู่กับชีทเคลม แล้วสร้างแบบฟอร์ม PDF หลายเลขเป็น ZIP เดียว</p><div class="open">เปิดเครื่องมือ →</div></article>
         </div>
       </section>
       <section class="workspace" id="workspace">
@@ -50,7 +52,8 @@
       expense:{title:'ทำเอกสารสลิป',src:'tools/expense-slip.html'},
       orders:{title:'คำนวณออเดอร์',src:'tools/order-planner.html'},
       claims:{title:'ทำเอกสารเคลม',src:'tools/claims.html'},
-      stalled:{title:'เคลมพัสดุไม่เคลื่อนไหว',src:'tools/stalled-claims.html'}
+      stalled:{title:'เคลมพัสดุไม่เคลื่อนไหว',src:'tools/stalled-claims.html'},
+      batch:{title:'แบบฟอร์มเคลมหลายเลข',src:'tools/batch-claim-pdf.html'}
     };
     const home=document.getElementById('home'),workspace=document.getElementById('workspace'),frame=document.getElementById('toolFrame'),title=document.getElementById('toolTitle'),loading=document.getElementById('loading');
     function selectNav(key){document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('active',key==='home'?b.dataset.view==='home':b.dataset.tool===key));}
