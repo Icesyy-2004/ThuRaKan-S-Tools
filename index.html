@@ -27,6 +27,7 @@
         <button data-tool="stalled"><span class="nav-icon">⏳</span>เคลมไม่เคลื่อนไหว</button>
         <button data-tool="batch"><span class="nav-icon">🗂️</span>แบบฟอร์มเคลมหลายเลข</button>
         <button data-tool="withdrawal"><span class="nav-icon">📦</span>ตารางเบิกของ</button>
+        <button data-tool="tracking"><span class="nav-icon">🔎</span>จัดชุดรีเสิร์ชพัสดุ</button>
       </nav>
       <div class="footnote">เลือกเครื่องมือแล้วเริ่มงานได้เลย<br>ข้อมูลส่วนตัวจะอยู่ในเบราว์เซอร์เครื่องนี้</div>
     </aside>
@@ -41,6 +42,7 @@
           <article class="tool-card" tabindex="0" role="button" data-tool="stalled"><div class="card-icon">⏳</div><h2>เคลมพัสดุไม่เคลื่อนไหว</h2><p>กรอกครั้งเดียว ลากรูปมาวาง แล้วรับเอกสาร 2 ชุดพร้อมกันใน ZIP</p><div class="open">เปิดเครื่องมือ →</div></article>
           <article class="tool-card" tabindex="0" role="button" data-tool="batch"><div class="card-icon">🗂️</div><h2>แบบฟอร์มเคลมหลายเลข</h2><p>จับคู่ไฟล์ที่อยู่กับชีทเคลม แล้วสร้างแบบฟอร์ม PDF หลายเลขเป็น ZIP เดียว</p><div class="open">เปิดเครื่องมือ →</div></article>
           <article class="tool-card" tabindex="0" role="button" data-tool="withdrawal"><div class="card-icon">📦</div><h2>สรุปเบิกของตามสินค้า</h2><p>แยกสินค้าหลัก ออเดอร์เดี่ยว และออเดอร์อัพ พร้อมตารางเบิก Excel</p><div class="open">เปิดเครื่องมือ →</div></article>
+                  <article class="tool-card" tabindex="0" role="button" data-tool="tracking"><div class="card-icon">🔎</div><h2>จัดชุดรีเสิร์ชพัสดุ</h2><p>รวมหลายไฟล์ แยกตาม VIP ชุดละ 500 และกรองผลเซ็นรับเพื่อรีเสิร์ชต่อ</p><div class="open">เปิดเครื่องมือ →</div></article>
         </div>
       </section>
       <section class="workspace" id="workspace">
@@ -56,7 +58,8 @@
       claims:{title:'ทำเอกสารเคลม',src:'tools/claims.html'},
       stalled:{title:'เคลมพัสดุไม่เคลื่อนไหว',src:'tools/stalled-claims.html'},
       batch:{title:'แบบฟอร์มเคลมหลายเลข',src:'tools/batch-claim-pdf.html'},
-      withdrawal:{title:'สรุปเบิกของตามสินค้า',src:'tools/product-withdrawal.html'}
+      withdrawal:{title:'สรุปเบิกของตามสินค้า',src:'tools/product-withdrawal.html'},
+      tracking:{title:'จัดชุดรีเสิร์ชพัสดุ',src:'tools/tracking-research.html'}
     };
     const home=document.getElementById('home'),workspace=document.getElementById('workspace'),frame=document.getElementById('toolFrame'),title=document.getElementById('toolTitle'),loading=document.getElementById('loading');
     function selectNav(key){document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('active',key==='home'?b.dataset.view==='home':b.dataset.tool===key));}
